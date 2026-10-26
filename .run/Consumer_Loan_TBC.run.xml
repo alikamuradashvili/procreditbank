@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Consumer Loan TBC" type="PythonConfigurationType" factoryName="Python">
+    <module name="procreditbank" />
+    <option name="SDK_HOME" value="$PROJECT_DIR$/.venv/Scripts/python.exe" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="IS_MODULE_SDK" value="false" />
+    <option name="SCRIPT_NAME" value="pytest" />
+    <option name="MODULE_MODE" value="true" />
+    <option name="PARAMETERS" value="tests/test_consumer_loan_application.py -k test_02_loan_application_otp_tbc_selection --live -s --tb=short" />
+    <envs><env name="PYTHONIOENCODING" value="utf-8" /></envs>
+    <method v="2" />
+  </configuration>
+</component>

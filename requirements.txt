@@ -1,0 +1,5 @@
+selenium>=4.27,<5
+pytest>=8.3,<10
+python-dotenv>=1.0,<2
+# IntelliJ IDEA 2023.2 package inspection compatibility
+setuptools>=70,<81
