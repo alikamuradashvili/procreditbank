@@ -5,6 +5,7 @@ from enum import Enum
 class Bank(str, Enum):
     BOG = 'bog'
     TBC = 'tbc'
+    IDENTOMAT = 'Identomat'
     PROCREDIT = 'procredit'
 
 
@@ -33,5 +34,5 @@ class Scenario:
             raise ValueError('Only the BOG completion flow has been inspected.')
 
 
-class BankMethodUnavailable(RuntimeError):
+class BankMethodUnavailable(AssertionError):
     """Requested bank is not exposed by the verification-method page."""

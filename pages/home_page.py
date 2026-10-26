@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 
+from selenium.common.exceptions import ElementClickInterceptedException, StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -24,17 +25,37 @@ class HomePage(BasePage):
         return self
 
     def open_consumer_loan(self):
-        # Desktop menus reveal submenus on hover. The bank uses mid=1571 here;
-        # list=3589 is another valid context for the same product path.
-        ActionChains(self.driver).move_to_element(self.visible(self.PERSONAL_MENU)).perform()
-        # Hover must finish before moving into the nested loans column.
-        loans = self.wait.until(lambda _: self.visible_elements(self.PERSONAL_LOANS))[0]
-        assert loans.is_displayed(), 'Personal loans submenu did not open.'
-        ActionChains(self.driver).move_to_element(loans).perform()
-        link = self.wait.until(lambda _: next(iter(self.visible_elements(self.CONSUMER_LOAN)), False))
-        assert link.is_displayed(), 'Consumer loan product link is not visible.'
-        link.click()
+        self.assert_condition(
+            lambda _: self._try_open_consumer_loan(),
+            'Consumer loan menu link remained hidden or covered after reopening the menu.')
         self.wait.until(lambda d: urlparse(d.current_url).path.rstrip('/') == '/ge/samomkhmareblo-seskhi')
         page = ConsumerLoanPage(self.driver, self.timeout)
         page.assert_loaded()
         return page
+
+    def _try_open_consumer_loan(self):
+        """Reopen the entire hover chain when animation or a banner intercepts it."""
+        try:
+            menus = self.visible_elements(self.PERSONAL_MENU)
+            if not menus:
+                return False
+            ActionChains(self.driver).move_to_element(menus[0]).perform()
+            loans = self.visible_elements(self.PERSONAL_LOANS)
+            if not loans:
+                return False
+            ActionChains(self.driver).move_to_element(loans[0]).perform()
+            links = self.visible_elements(self.CONSUMER_LOAN)
+            for link in links:
+                # Do not scroll a hover menu: scrolling can close it.
+                ActionChains(self.driver).move_to_element(link).perform()
+                uncovered = self.driver.execute_script("""
+                    const e=arguments[0], r=e.getBoundingClientRect();
+                    const top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+                    return r.width > 0 && r.height > 0 && top && (top===e || e.contains(top));
+                """, link)
+                if uncovered and link.is_displayed() and link.is_enabled():
+                    link.click()
+                    return True
+            return False
+        except (ElementClickInterceptedException, StaleElementReferenceException):
+            return False

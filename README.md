@@ -18,7 +18,7 @@ The SMS poll interval is one second; only matching fresh messages are used.
 | --- | --- |
 | test_01_loan_application_otp_bog_complete | Initial 6-digit OTP → BOG selection → fresh 4-digit BOG OTP → personal details → configured consents → success assertions |
 | test_02_loan_application_otp_tbc_selection | Initial OTP → select TBC and verify selection; no TBC confirmation request |
-| test_03_loan_application_otp_procredit_selection | Initial OTP → look for an explicitly labeled ProCredit radio; select if present, otherwise SKIP with reason |
+| test_03_loan_application_otp_identomat_selection | Initial OTP → select Identomat and verify selection; stop before starting video identification |
 
 The observed verification options were `bog`, `tbc`, and `Identomat`. Identomat is
 not substituted for ProCredit. TBC and ProCredit completion flows are not verified.
@@ -41,8 +41,8 @@ the Android phone for ADB. OTP values and SMS bodies are not logged or saved.
 .\.venv\Scripts\python.exe -m pytest tests/test_consumer_loan_application.py -k test_01_loan_application_otp_bog_complete --live --complete-application -s
 # TBC selection only:
 .\.venv\Scripts\python.exe -m pytest tests/test_consumer_loan_application.py -k test_02_loan_application_otp_tbc_selection --live -s
-# ProCredit availability/selection:
-.\.venv\Scripts\python.exe -m pytest tests/test_consumer_loan_application.py -k test_03_loan_application_otp_procredit_selection --live -s
+# Identomat selection:
+.\.venv\Scripts\python.exe -m pytest tests/test_consumer_loan_application.py -k test_03_loan_application_otp_identomat_selection --live -s
 # Local tests, no bank or phone access:
 .\.venv\Scripts\python.exe -m pytest tests/test_sms_reader.py -q
 ```

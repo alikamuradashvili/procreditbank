@@ -1,6 +1,6 @@
 import pytest
 
-from support.scenario import Bank, BankMethodUnavailable, Consents, EndPoint, Scenario
+from support.scenario import Bank, Consents, EndPoint, Scenario
 
 
 def fill_loan_application(request, *, bank, end_at,
@@ -22,14 +22,9 @@ def fill_loan_application(request, *, bank, end_at,
     flow = request.getfixturevalue('application_flow')
     loan = request.getfixturevalue('loan_data')
     applicant = request.getfixturevalue('applicant')
-    try:
-        result = flow.fill_application(
-            loan, applicant['mobile'], scenario,
-            same_address=same_address, is_pep=is_pep)
-    except BankMethodUnavailable as error:
-        if bank != Bank.PROCREDIT:
-            raise
-        pytest.skip(str(error))
+    result = flow.fill_application(
+        loan, applicant['mobile'], scenario,
+        same_address=same_address, is_pep=is_pep)
     assert result == end_at
 
 
@@ -46,6 +41,6 @@ class TestConsumerLoanApplication:
         fill_loan_application(
             request, bank=Bank.TBC, end_at=EndPoint.BANK_SELECTION)
 
-    def test_03_loan_application_otp_procreateSelection(self, request):
+    def test_03_loan_application_otp_identomat_selection(self, request):
         fill_loan_application(
-            request, bank=Bank.PROCREDIT, end_at=EndPoint.BANK_SELECTION)
+            request, bank=Bank.IDENTOMAT, end_at=EndPoint.BANK_SELECTION)

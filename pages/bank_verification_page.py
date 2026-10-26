@@ -20,26 +20,34 @@ class BankVerificationPage(BasePage):
 
     def select_bank(self, bank):
         self.assert_loaded()
-        if bank in (Bank.BOG, Bank.TBC):
+        if bank in (Bank.BOG, Bank.TBC, Bank.IDENTOMAT):
             locator = (By.CSS_SELECTOR, f'input[name="bank"][value="{bank.value}"]')
             element = self.visible(locator)
         else:
             # ProCredit was not present in the observed list. Do not substitute
             # Identomat (video identification) or invent a radio value.
-            labels = self.driver.find_elements(
-                By.XPATH, "//label[contains(., 'პროკრედიტ') or contains(., 'ProCredit')]")
-            matches = []
+            matches = {}
+            labels = self.driver.find_elements(By.TAG_NAME, 'label')
             for label in labels:
-                if not label.is_displayed():
+                text = label.text.casefold()
+                if not label.is_displayed() or not any(
+                    name in text for name in ('პროკრედიტ', 'procredit', 'pro credit')
+                ):
                     continue
                 target_id = label.get_attribute('for')
                 inputs = (self.driver.find_elements(By.ID, target_id) if target_id
                           else label.find_elements(By.CSS_SELECTOR, 'input[name="bank"]'))
-                matches.extend(e for e in inputs if e.get_attribute('name') == 'bank')
-            if len(matches) != 1:
+                for candidate in inputs:
+                    if candidate.get_attribute('name') == 'bank':
+                        matches[candidate.id] = candidate
+            if not matches:
+                available = [e.get_attribute('value') for e in self.driver.find_elements(*self.OPTIONS)]
                 raise BankMethodUnavailable(
-                    'ProCredit verification option is absent or ambiguous; reached bank selection only.')
-            element = matches[0]
+                    f'ProCredit verification option was not found. Available bank radio values: {available}. '
+                    'Identomat is a separate verification method and is not substituted for ProCredit.')
+            if len(matches) > 1:
+                raise AssertionError('Multiple distinct ProCredit verification options matched the labels.')
+            element = next(iter(matches.values()))
         if not element.is_selected():
             self.click_element(element)
         self.wait.until(lambda _: element.is_selected(), 'Requested bank was not selected.')
